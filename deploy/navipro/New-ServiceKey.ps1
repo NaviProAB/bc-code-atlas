@@ -33,7 +33,7 @@ if (-not $kv) { throw "No Key Vault found in $ResourceGroup." }
 $secretName = "atlas-key-$Name"
 
 if ($Remove) {
-    $py = "import json,sys; p='/etc/bcatlas/service-keys.json'; d=json.load(open(p)); d['services'].pop('$Name', None); json.dump(d, open(p,'w'), indent=1)"
+    $change = "d['services'].pop('$Name', None)"
 } else {
     $bytes = [byte[]]::new(32)
     [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
@@ -49,13 +49,30 @@ if ($Remove) {
         if ($LASTEXITCODE -ne 0) { throw 'Could not store the key in Key Vault.' }
     } finally { Remove-Item $tmp -Force }
     $key = $null
-    $py = "import json,sys; p='/etc/bcatlas/service-keys.json'; d=json.load(open(p)); d['services']['$Name']={'sha256':'$hash'}; json.dump(d, open(p,'w'), indent=1)"
+    $change = "d['services']['$Name'] = {'sha256': '$hash'}"
 }
 
-az vm run-command invoke -g $ResourceGroup -n $VmName @sub --command-id RunShellScript `
-    --scripts "python3 -c `"$py`" && chown root:bcatlas /etc/bcatlas/service-keys.json && chmod 640 /etc/bcatlas/service-keys.json && python3 -c `"import json; print(sorted(json.load(open('/etc/bcatlas/service-keys.json'))['services']))`"" `
-    --query 'value[0].message' -o tsv
-if ($LASTEXITCODE -ne 0) { throw 'Could not update the key list on the VM.' }
+# The VM only ever receives the hash. Sent as a script file: quoting a Python
+# one-liner through az and two shells does not survive on Windows.
+$script = @"
+set -e
+python3 - <<'PY'
+import json
+p = '/etc/bcatlas/service-keys.json'
+d = json.load(open(p))
+$change
+json.dump(d, open(p, 'w'), indent=1)
+print('service keys on the server:', ', '.join(sorted(d['services'])) or '(none)')
+PY
+chown root:bcatlas /etc/bcatlas/service-keys.json
+chmod 640 /etc/bcatlas/service-keys.json
+"@
+$scriptFile = New-TemporaryFile
+try {
+    [IO.File]::WriteAllText($scriptFile, ($script -replace "`r", ''))
+    az vm run-command invoke -g $ResourceGroup -n $VmName @sub --command-id RunShellScript --scripts "@$scriptFile" --query 'value[0].message' -o tsv
+    if ($LASTEXITCODE -ne 0) { throw 'Could not update the key list on the VM.' }
+} finally { Remove-Item $scriptFile -Force }
 
 if ($Remove) {
     az keyvault secret delete --vault-name $kv --name $secretName @sub --query id -o tsv 2>$null | Out-Null
