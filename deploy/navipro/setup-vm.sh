@@ -64,9 +64,10 @@ sudo -u "$RUN_AS" -H bash -euo pipefail -c "
   uv sync --project tools/graphify-al --extra al --extra mcp
   mkdir -p ~/.cocoindex_code
   cat > ~/.cocoindex_code/global_settings.yml <<'YML'
-provider: sentence-transformers
-model: ibm-granite/granite-embedding-97m-multilingual-r2
-device: cpu
+embedding:
+  provider: sentence-transformers
+  model: ibm-granite/granite-embedding-97m-multilingual-r2
+  device: cpu
 YML
 "
 
