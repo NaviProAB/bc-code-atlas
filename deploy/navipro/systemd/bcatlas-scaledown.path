@@ -1,0 +1,8 @@
+[Unit]
+Description=bc-code-atlas: scale the VM down when the first index is done
+
+[Path]
+PathExists=/var/lib/bcatlas/indexed
+
+[Install]
+WantedBy=multi-user.target

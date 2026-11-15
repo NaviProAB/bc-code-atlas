@@ -13,4 +13,4 @@ install -d -o bcatlas -g bcatlas /opt/bcatlas
 if [ ! -d /opt/bcatlas/bc-code-atlas/.git ]; then
   sudo -u bcatlas -H git clone --branch '__REPO_BRANCH__' '__REPO_URL__' /opt/bcatlas/bc-code-atlas
 fi
-bash /opt/bcatlas/bc-code-atlas/deploy/navipro/setup-vm.sh '__HOSTNAME__' '__GITHUB_ORGS__'
+bash /opt/bcatlas/bc-code-atlas/deploy/navipro/setup-vm.sh '__HOSTNAME__' '__GITHUB_ORGS__' '__SCALE_DOWN_TO__'

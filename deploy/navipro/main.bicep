@@ -32,6 +32,9 @@ param repoBranch string = 'navipro'
 @description('GitHub organizations whose members may use the server, comma separated.')
 param githubOrgs string = 'NaviProAB'
 
+@description('Size the VM resizes itself to when the first index is done. Empty keeps vmSize.')
+param scaleDownTo string = 'Standard_D4s_v5'
+
 @description('Object id of the person or group that manages the service keys in Key Vault.')
 param keyVaultAdminObjectId string
 
@@ -41,7 +44,7 @@ param tags object = {
 }
 
 var hostname = '${dnsLabel}.${location}.cloudapp.azure.com'
-var cloudInit = replace(replace(replace(replace(loadTextContent('cloud-init.sh'), '__REPO_URL__', repoUrl), '__REPO_BRANCH__', repoBranch), '__HOSTNAME__', hostname), '__GITHUB_ORGS__', githubOrgs)
+var cloudInit = replace(replace(replace(replace(replace(loadTextContent('cloud-init.sh'), '__REPO_URL__', repoUrl), '__REPO_BRANCH__', repoBranch), '__HOSTNAME__', hostname), '__GITHUB_ORGS__', githubOrgs), '__SCALE_DOWN_TO__', scaleDownTo)
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-bcatlas'
@@ -149,6 +152,18 @@ resource kvAdmin 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   properties: {
     principalId: keyVaultAdminObjectId
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+  }
+}
+
+// Virtual Machine Contributor on this VM only, for the VM's own identity: lets
+// scale-down.sh resize the VM after the first index. It reaches nothing else.
+resource vmSelfResize 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(scaleDownTo)) {
+  name: guid(vm.id, 'self-resize')
+  scope: vm
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')
   }
 }
 

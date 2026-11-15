@@ -3,7 +3,7 @@
 # Run as root. cloud-init runs it at first boot; run it again after changing a
 # unit file or the Caddyfile.
 #
-#   setup-vm.sh <public-hostname> [github-orgs]
+#   setup-vm.sh <public-hostname> [github-orgs] [scale-down-to-size]
 #
 # What it leaves behind:
 #   /opt/bcatlas/bc-code-atlas     this repository, owned by user bcatlas
@@ -15,6 +15,7 @@ set -euo pipefail
 
 HOSTNAME_PUBLIC="${1:?usage: setup-vm.sh <public-hostname> [github-orgs]}"
 GITHUB_ORGS="${2:-NaviProAB}"
+SCALE_DOWN_TO="${3:-}"   # e.g. Standard_D4s_v5; the VM resizes itself after the first index
 REPO=/opt/bcatlas/bc-code-atlas
 HERE="$REPO/deploy/navipro"
 RUN_AS=bcatlas
@@ -72,7 +73,14 @@ YML
 "
 
 echo "==> systemd and caddy"
-install -m 644 "$HERE"/systemd/*.service "$HERE"/systemd/*.target /etc/systemd/system/
+install -m 644 "$HERE"/systemd/*.service "$HERE"/systemd/*.target "$HERE"/systemd/*.path /etc/systemd/system/
+# Size to drop to once the first index is done (see scale-down.sh). Empty = stay as is.
+if [ -n "$SCALE_DOWN_TO" ]; then
+  echo "SCALE_DOWN_TO=$SCALE_DOWN_TO" > /etc/bcatlas/scale-down.env
+  systemctl enable --now bcatlas-scaledown.path
+else
+  systemctl disable --now bcatlas-scaledown.path 2>/dev/null || true
+fi
 sed "s/__HOSTNAME__/$HOSTNAME_PUBLIC/" "$HERE/Caddyfile" > /etc/caddy/Caddyfile
 systemctl daemon-reload
 systemctl enable bcatlas.target bcatlas-gateway.service bcatlas-firstindex.service caddy

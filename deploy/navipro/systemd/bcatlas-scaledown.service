@@ -1,0 +1,13 @@
+[Unit]
+Description=bc-code-atlas: resize this VM to its serving size (runs once)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/var/lib/bcatlas/indexed
+ConditionPathExists=!/var/lib/bcatlas/scaled-down
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/bcatlas/scale-down.env
+ExecStart=/opt/bcatlas/bc-code-atlas/deploy/navipro/scale-down.sh ${SCALE_DOWN_TO}
+Restart=on-failure
+RestartSec=600
