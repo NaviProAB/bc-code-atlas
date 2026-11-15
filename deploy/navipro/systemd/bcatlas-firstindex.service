@@ -9,6 +9,7 @@ Type=oneshot
 User=bcatlas
 Group=bcatlas
 Environment=HOME=/home/bcatlas
+Environment=UV_PYTHON=3.13
 ExecStart=/opt/bcatlas/bc-code-atlas/deploy/navipro/first-index.sh
 # The "+" runs this one line as root: start the backends once the index exists.
 ExecStartPost=+/usr/bin/systemctl start --no-block bcatlas.target

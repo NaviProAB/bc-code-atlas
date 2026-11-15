@@ -18,11 +18,12 @@ GITHUB_ORGS="${2:-NaviProAB}"
 REPO=/opt/bcatlas/bc-code-atlas
 HERE="$REPO/deploy/navipro"
 RUN_AS=bcatlas
+PYTHON_VERSION=3.13   # keep in step with Environment=UV_PYTHON in systemd/*.service
 
 echo "==> packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
-apt-get install -y -q git curl ca-certificates build-essential debian-keyring debian-archive-keyring apt-transport-https gnupg
+apt-get install -y -q git curl ca-certificates build-essential libffi-dev libssl-dev pkg-config debian-keyring debian-archive-keyring apt-transport-https gnupg
 if ! command -v caddy >/dev/null; then
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
@@ -52,6 +53,9 @@ sudo -u "$RUN_AS" -H bash -c 'command -v ~/.local/bin/uv >/dev/null || curl -LsS
 echo "==> python environments"
 sudo -u "$RUN_AS" -H bash -euo pipefail -c "
   export PATH=\$HOME/.local/bin:\$PATH
+  # Pin the interpreter: uv otherwise takes the newest CPython, which may have no
+  # prebuilt wheels yet (3.15 did not, and the build then needs a C toolchain).
+  export UV_PYTHON=$PYTHON_VERSION
   cd '$REPO'
   git submodule update --init --recursive --force
   git -C data/docs sparse-checkout init --cone && git -C data/docs sparse-checkout set business-central

@@ -4,6 +4,7 @@
 # re-run: `ccc index` resumes from its own tracking state.
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
+export UV_PYTHON="${UV_PYTHON:-3.13}"
 ROOT=/opt/bcatlas/bc-code-atlas
 MARKER=/var/lib/bcatlas/indexed
 

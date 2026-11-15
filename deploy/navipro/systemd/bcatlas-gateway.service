@@ -9,6 +9,7 @@ Group=bcatlas
 WorkingDirectory=/opt/bcatlas/bc-code-atlas/deploy/navipro/gateway
 Environment=PATH=/home/bcatlas/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/bcatlas
+Environment=UV_PYTHON=3.13
 EnvironmentFile=/etc/bcatlas/gateway.env
 ExecStart=/home/bcatlas/.local/bin/uv run --no-dev --project /opt/bcatlas/bc-code-atlas/deploy/navipro/gateway python gateway.py
 Restart=always
