@@ -100,12 +100,26 @@ CPU before search answers again.
 
 ## Cost and size
 
-`Standard_D8s_v5` (8 cores, 32 GB) is sized for the first index. If the server is idle
-after that, resize to `Standard_D4s_v5` to halve the cost:
+The VM starts as `Standard_D8s_v5` (8 cores, 32 GB), sized for the first index, and
+**resizes itself** to `scaleDownTo` (default `Standard_D4s_v5`, 4 cores, 16 GB) when that
+index is done:
+
+- `first-index.sh` writes `/var/lib/bcatlas/indexed` when the index and the graph are built.
+- `bcatlas-scaledown.path` sees the file and starts `scale-down.sh`, which asks Azure to
+  resize the VM using the VM's own identity (Virtual Machine Contributor on this VM only).
+- Azure restarts the VM; the services start again by themselves. It runs once
+  (`/var/lib/bcatlas/scaled-down`).
+
+Check it, or resize by hand:
 
 ```powershell
+az vm run-command invoke -g rg-bc-atlas -n vm-bcatlas --command-id RunShellScript `
+  --scripts "bash /opt/bcatlas/bc-code-atlas/deploy/navipro/scale-down.sh Standard_D4s_v5 --check"
 az vm resize -g rg-bc-atlas -n vm-bcatlas --size Standard_D4s_v5
 ```
+
+After the restart the search backend reprocesses the corpus before it answers, which takes
+longer on four cores. If serving several countries needs more memory than 16 GB, resize up.
 
 ## Tests
 
