@@ -1,0 +1,17 @@
+[project]
+name = "bcatlas-gateway"
+version = "0.1.0"
+description = "Sign-in gateway for a self-hosted bc-code-atlas: GitHub organization members and service keys"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "starlette>=0.40",
+    "uvicorn>=0.30",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

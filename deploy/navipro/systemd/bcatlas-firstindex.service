@@ -1,0 +1,20 @@
+[Unit]
+Description=bc-code-atlas first index of the default corpus (runs once, hours on CPU)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/bcatlas/indexed
+
+[Service]
+Type=oneshot
+User=bcatlas
+Group=bcatlas
+Environment=HOME=/home/bcatlas
+ExecStart=/opt/bcatlas/bc-code-atlas/deploy/navipro/first-index.sh
+# The "+" runs this one line as root: start the backends once the index exists.
+ExecStartPost=+/usr/bin/systemctl start --no-block bcatlas.target
+TimeoutStartSec=infinity
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

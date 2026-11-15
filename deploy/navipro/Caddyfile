@@ -1,0 +1,13 @@
+# TLS certificate from Let's Encrypt for the Azure DNS name; everything goes to
+# the sign-in gateway, never straight to the atlas servers.
+__HOSTNAME__ {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8790 {
+		# MCP answers can be server-sent events: do not buffer them.
+		flush_interval -1
+		transport http {
+			read_timeout 1h
+			response_header_timeout 1h
+		}
+	}
+}

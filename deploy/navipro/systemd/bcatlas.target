@@ -1,0 +1,6 @@
+[Unit]
+Description=bc-code-atlas backends (search, graph, registry, build, aggregator)
+Wants=bcatlas-search.service bcatlas-graph.service bcatlas-registry.service bcatlas-build.service bcatlas-aggregator.service
+
+[Install]
+WantedBy=multi-user.target

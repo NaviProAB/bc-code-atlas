@@ -1,0 +1,18 @@
+[Unit]
+Description=bc-code-atlas sign-in gateway (:8790) - GitHub organization members and service keys
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=bcatlas
+Group=bcatlas
+WorkingDirectory=/opt/bcatlas/bc-code-atlas/deploy/navipro/gateway
+Environment=PATH=/home/bcatlas/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/bcatlas
+EnvironmentFile=/etc/bcatlas/gateway.env
+ExecStart=/home/bcatlas/.local/bin/uv run --no-dev --project /opt/bcatlas/bc-code-atlas/deploy/navipro/gateway python gateway.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

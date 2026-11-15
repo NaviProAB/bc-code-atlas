@@ -1,0 +1,19 @@
+[Unit]
+Description=bc-code-atlas semantic search backend (:8801)
+After=network-online.target
+Wants=network-online.target
+PartOf=bcatlas.target
+ConditionPathExists=/var/lib/bcatlas/indexed
+
+[Service]
+User=bcatlas
+Group=bcatlas
+WorkingDirectory=/opt/bcatlas/bc-code-atlas
+Environment=PATH=/home/bcatlas/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/bcatlas
+ExecStart=/opt/bcatlas/bc-code-atlas/scripts/start-search-server.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=bcatlas.target
